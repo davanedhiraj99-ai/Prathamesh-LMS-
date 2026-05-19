@@ -6,5 +6,9 @@
       "src": "api/[...all].js",
       "use": "@vercel/node"
     }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "api/[...all].js" },
+    { "src": "/", "status": 302, "headers": { "Location": "/api/health" } }
   ]
 }
