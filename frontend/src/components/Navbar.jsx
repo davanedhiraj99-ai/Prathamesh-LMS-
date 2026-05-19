@@ -8,6 +8,7 @@ const Navbar = () => {
   const [courses, setCourses] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileCoursesOpen, setIsMobileCoursesOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
@@ -33,6 +34,10 @@ const Navbar = () => {
   useEffect(() => {
     if (isDesktop) setIsMobileMenuOpen(false);
   }, [isDesktop]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) setIsMobileCoursesOpen(false);
+  }, [isMobileMenuOpen]);
 
   const fetchCourses = async () => {
     try {
@@ -62,6 +67,7 @@ const Navbar = () => {
   const handleCourseClick = (courseId) => {
     setIsDropdownOpen(false);
     setIsMobileMenuOpen(false);
+    setIsMobileCoursesOpen(false);
     navigate(`/course/${courseId}`);
   };
 
@@ -192,6 +198,38 @@ const Navbar = () => {
             <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">
               Home
             </Link>
+            <div className="rounded-lg border border-slate-200 bg-white">
+              <button
+                type="button"
+                onClick={() => setIsMobileCoursesOpen((v) => !v)}
+                className="w-full px-3 py-2 text-left text-sm font-semibold text-slate-800 flex items-center justify-between"
+              >
+                <span>Courses</span>
+                <span className="text-slate-500">{isMobileCoursesOpen ? '–' : '+'}</span>
+              </button>
+              {isMobileCoursesOpen && (
+                <div className="border-t border-slate-200">
+                  {loading ? (
+                    <div className="px-3 py-2 text-sm text-slate-500">Loading...</div>
+                  ) : courses.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-slate-500">No courses available</div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto py-1">
+                      {courses.map((course) => (
+                        <button
+                          key={course.id}
+                          onClick={() => handleCourseClick(course.id)}
+                          className="w-full text-left px-3 py-2 hover:bg-slate-50 transition"
+                        >
+                          <p className="text-sm font-semibold text-slate-900 truncate">{course.name}</p>
+                          <p className="text-xs text-slate-500">{course.video_count} videos</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <Link to="/testimonials" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">
               Testimonials
             </Link>

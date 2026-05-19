@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "LMS Backend for Prathamesh Sir",
   "type": "module",
-  "main": "api/index.js",
+  "main": "dev.js",
   "scripts": {
-    "start": "node api/index.js",
-    "dev": "node --watch api/index.js",
-    "setup": "node scripts/setup.js"
+    "start": "node dev.js",
+    "dev": "node --watch dev.js",
+    "setup": "node scripts/setup.js",
+    "check:db": "node scripts/check-db.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

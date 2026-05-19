@@ -79,8 +79,8 @@ CREATE TABLE testimonials (
 INSERT INTO students (name, email, password, role) 
 VALUES (
     'Admin User', 
-    'admin@Adminprathameshsir.com', 
-    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 
+    'admin@gmail.com', 
+    '$2a$10$pbNePMqqkKjtRuYvBl31teC/mOeuc8ZKKOHeE.wMPgF66s90ZFQoy', 
     'admin'
 ) ON CONFLICT (email) DO NOTHING;
 

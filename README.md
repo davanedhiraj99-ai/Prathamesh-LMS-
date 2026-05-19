@@ -17,7 +17,7 @@ A secure, feature-rich Learning Management System built for JEE, NEET, and board
 |-------|-----------|
 | **Frontend** | React 18, Vite, Tailwind CSS, React Router |
 | **Backend** | Node.js, Vercel Serverless Functions |
-| **Database** | Neon PostgreSQL |
+| **Database** | PostgreSQL (Supabase/Neon) |
 | **CDN** | Bunny.net Video Streaming |
 | **Auth** | JWT with IP tracking |
 
@@ -25,7 +25,7 @@ A secure, feature-rich Learning Management System built for JEE, NEET, and board
 
 ### Prerequisites
 - Node.js 18+
-- Neon PostgreSQL account
+- Supabase (Postgres) account (or Neon)
 - Bunny.net account
 
 ### Installation
@@ -44,4 +44,5 @@ npm run dev
 
 ### Database setup
 
-- Run the SQL in `backend/database/schema.sql` in your Neon SQL editor.
+- Create a Supabase project (Postgres), then copy the project’s Postgres connection string into `backend/.env` as `DATABASE_URL`.
+- Run the SQL in `backend/database/schema.sql` in the Supabase **SQL Editor** (or Neon SQL editor).

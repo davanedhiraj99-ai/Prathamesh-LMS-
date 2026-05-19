@@ -3,14 +3,8 @@
   "name": "prathamesh-sir-lms-backend",
   "builds": [
     {
-      "src": "api/**/*.js",
+      "src": "api/[...all].js",
       "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/api/$1"
     }
   ]
 }
