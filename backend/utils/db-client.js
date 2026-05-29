@@ -3,6 +3,18 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: new URL('../../.env', import.meta.url) });
 
+function normalizeDatabaseUrl(databaseUrl) {
+  if (!databaseUrl) return databaseUrl;
+  try {
+    const url = new URL(databaseUrl);
+    // Force SSL handling via the explicit `ssl` option below.
+    url.searchParams.delete('sslmode');
+    return url.toString();
+  } catch {
+    return databaseUrl;
+  }
+}
+
 function shouldUseSsl(databaseUrl) {
   if (!databaseUrl) return false;
 
@@ -21,9 +33,12 @@ function shouldUseSsl(databaseUrl) {
   return true;
 }
 
+const databaseUrl = process.env.DATABASE_URL;
+const useSsl = shouldUseSsl(databaseUrl);
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: shouldUseSsl(process.env.DATABASE_URL) ? { rejectUnauthorized: false } : false
+  connectionString: normalizeDatabaseUrl(databaseUrl),
+  ssl: useSsl ? { rejectUnauthorized: false } : false
 });
 
 export default pool;
