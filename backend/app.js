@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express from 'express';
 import cors from './middleware/cors.js';
 
@@ -70,4 +69,3 @@ app.use((req, res) => {
 });
 
 export default app;
-

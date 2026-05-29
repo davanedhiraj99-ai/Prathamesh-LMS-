@@ -17,3 +17,4 @@
     { "src": "/", "status": 302, "headers": { "Location": "/api/health" } }
   ]
 }
+

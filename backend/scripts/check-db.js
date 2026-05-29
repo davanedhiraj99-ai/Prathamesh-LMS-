@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import pool from '../utils/db-client.js';
+
+dotenv.config({ path: new URL('../../.env', import.meta.url) });
 
 async function main() {
   if (!process.env.DATABASE_URL) {
-    console.error('Missing DATABASE_URL in backend/.env');
+    console.error('Missing DATABASE_URL in .env (repo root)');
     process.exit(1);
   }
 
@@ -23,4 +25,3 @@ async function main() {
 }
 
 main();
-

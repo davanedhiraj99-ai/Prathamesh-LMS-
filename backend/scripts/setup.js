@@ -3,6 +3,7 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import readline from 'readline';
+import path from 'path';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -19,7 +20,9 @@ async function setup() {
     console.log('\n📦 Installing dependencies...');
     execSync('npm install', { stdio: 'inherit' });
 
-    if (!fs.existsSync('.env')) {
+    const rootEnvPath = path.resolve(process.cwd(), '..', '.env');
+
+    if (!fs.existsSync(rootEnvPath)) {
       console.log('\n🔧 Creating environment file...');
       
       const dbUrl = await question('Enter DATABASE_URL: ');
@@ -41,8 +44,8 @@ BUNNY_LIBRARY_ID=${bunnyLib}
 VITE_BUNNY_LIBRARY_ID=${bunnyLib}
 `;
 
-      fs.writeFileSync('.env', envContent);
-      console.log('✅ .env file created');
+      fs.writeFileSync(rootEnvPath, envContent);
+      console.log('✅ .env file created at repo root');
     }
 
     console.log('\n✨ Setup complete! Run `npm run dev` to start development server.');

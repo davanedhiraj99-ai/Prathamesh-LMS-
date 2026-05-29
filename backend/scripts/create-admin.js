@@ -1,6 +1,8 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import pool from '../utils/db-client.js';
+
+dotenv.config({ path: new URL('../../.env', import.meta.url) });
 
 const email = process.env.ADMIN_EMAIL;
 const password = process.env.ADMIN_PASSWORD;

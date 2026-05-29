@@ -31,18 +31,22 @@ A secure, feature-rich Learning Management System built for JEE, NEET, and board
 ### Installation
 
 ```bash
-# Backend
-cd backend
-npm run setup
-npm run dev
-
-# Frontend (new terminal)
-cd frontend
 npm install
+npm run install:all
+
+# copy .env.example -> .env (repo root) and fill values
+
 npm run dev
 ```
 
 ### Database setup
 
-- Create a Supabase project (Postgres), then copy the project’s Postgres connection string into `backend/.env` as `DATABASE_URL`.
+- Create a Supabase project (Postgres), then copy the project’s Postgres connection string into `.env` (repo root) as `DATABASE_URL`.
 - Run the SQL in `backend/database/schema.sql` in the Supabase **SQL Editor** (or Neon SQL editor).
+
+## Vercel (frontend + backend, professional workflow)
+
+- Deploy `backend/` as one Vercel project (uses `backend/vercel.json`)
+  - Env vars: `DATABASE_URL`, `JWT_SECRET`, `BUNNY_API_KEY`, `BUNNY_LIBRARY_ID`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`, `NODE_ENV`, `FRONTEND_URL`
+- Deploy `frontend/` as one Vercel project (uses `frontend/vercel.json`)
+  - Env vars: `VITE_API_BASE_URL` (set to your deployed backend URL + `/api`), `VITE_BUNNY_LIBRARY_ID` (optional)
