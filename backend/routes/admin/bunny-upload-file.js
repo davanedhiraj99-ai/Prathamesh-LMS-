@@ -2,10 +2,12 @@ import checkAuth from '../../middleware/check-auth.js';
 import { Router } from 'express';
 import multer from 'multer';
 import fs from 'node:fs';
+import path from 'node:path';
 
-fs.mkdirSync('tmp', { recursive: true });
+const tmpDir = process.env.VERCEL ? '/tmp' : path.resolve('tmp');
+fs.mkdirSync(tmpDir, { recursive: true });
 const upload = multer({
-  dest: 'tmp/',
+  dest: tmpDir,
   limits: { fileSize: 2 * 1024 * 1024 * 1024 }
 });
 const router = Router();
