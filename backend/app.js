@@ -1,4 +1,3 @@
-import cookieParser from 'cookie-parser';
 import express from 'express';
 import cors from './middleware/cors.js';
 
@@ -7,7 +6,6 @@ import healthRouter from './routes/health.js';
 import testimonialsRouter from './routes/testimonials.js';
 import loginRouter from './routes/auth/login.js';
 import logoutRouter from './routes/auth/logout.js';
-import refreshRouter from './routes/auth/refresh.js';
 import batchesRouter from './routes/admin/batches.js';
 import batchContentRouter from './routes/admin/batch-content.js';
 import bunnyUploadRouter from './routes/admin/bunny-upload.js';
@@ -29,46 +27,6 @@ const app = express();
 
 app.set('trust proxy', 1);
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-  if (req.body == null) {
-    req.body = {};
-    return next();
-  }
-
-  if (Buffer.isBuffer(req.body)) {
-    const raw = req.body.toString('utf8').trim();
-    if (!raw) {
-      req.body = {};
-      return next();
-    }
-
-    try {
-      req.body = JSON.parse(raw);
-    } catch {
-      req.body = {};
-    }
-
-    return next();
-  }
-
-  if (typeof req.body === 'string') {
-    const raw = req.body.trim();
-    if (!raw) {
-      req.body = {};
-      return next();
-    }
-
-    try {
-      req.body = JSON.parse(raw);
-    } catch {
-      req.body = {};
-    }
-  }
-
-  return next();
-});
-app.use(cookieParser());
 app.use(cors);
 
 // All routes under /api prefix
@@ -76,7 +34,6 @@ app.use('/api/health', healthRouter);
 app.use('/api/testimonials', testimonialsRouter);
 app.use('/api/login', loginRouter);
 app.use('/api/logout', logoutRouter);
-app.use('/api/refresh', refreshRouter);
 
 // Admin Routes
 app.use('/api/admin/batches', batchesRouter);
