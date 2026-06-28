@@ -2,10 +2,36 @@ import axios from 'axios';
 import { clearAuthSession, getAccessToken, setAccessToken, setStoredUser } from './auth-session.js';
 import { getDeviceFingerprint, getDeviceId, getDeviceName } from './device-id.js';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+function createConfigurationError(message) {
+  const error = new Error(message);
+  error.code = 'API_CONFIG_MISSING';
+  return error;
+}
+
+function resolveBaseURL() {
+  const envBaseURL = String(import.meta.env.VITE_API_BASE_URL || '').trim();
+
+  if (envBaseURL) {
+    return envBaseURL;
+  }
+
+  if (import.meta.env.PROD) {
+    return null;
+  }
+
+  return 'http://localhost:3000/api';
+}
+
+const baseURL = resolveBaseURL();
+const configurationError =
+  !baseURL && import.meta.env.PROD
+    ? createConfigurationError(
+        'Missing VITE_API_BASE_URL in the frontend deployment. Set it to your backend Vercel URL ending with /api.'
+      )
+    : null;
 
 const instance = axios.create({
-  baseURL,
+  baseURL: baseURL || undefined,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -13,7 +39,7 @@ const instance = axios.create({
 });
 
 const refreshClient = axios.create({
-  baseURL,
+  baseURL: baseURL || undefined,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -21,6 +47,10 @@ const refreshClient = axios.create({
 });
 
 instance.interceptors.request.use((config) => {
+  if (configurationError) {
+    return Promise.reject(configurationError);
+  }
+
   const token = getAccessToken();
 
   if (token) {
@@ -38,6 +68,10 @@ let refreshPromise = null;
 instance.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (error.code === 'API_CONFIG_MISSING') {
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config || {};
     const requestUrl = originalRequest.url || '';
 
@@ -87,6 +121,11 @@ instance.interceptors.response.use(
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
+    }
+
+    if (!error.response && error.message === 'Network Error') {
+      error.message =
+        'Unable to reach the API. Check VITE_API_BASE_URL for this deployment and confirm the backend is online.';
     }
 
     return Promise.reject(error);
