@@ -57,6 +57,8 @@ coverage
 *.tmp
 tmp
 tmp/
+frontend/.npm-cache/
+backend/uploads/
 
 # OS files
 Thumbs.db

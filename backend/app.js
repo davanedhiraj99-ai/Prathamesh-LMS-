@@ -1,11 +1,17 @@
 import express from 'express';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 import cors from './middleware/cors.js';
+
+dotenv.config({ path: new URL('../.env', import.meta.url) });
 
 // Import Routes
 import healthRouter from './routes/health.js';
 import testimonialsRouter from './routes/testimonials.js';
 import loginRouter from './routes/auth/login.js';
 import logoutRouter from './routes/auth/logout.js';
+import refreshRouter from './routes/auth/refresh.js';
 import batchesRouter from './routes/admin/batches.js';
 import batchContentRouter from './routes/admin/batch-content.js';
 import bunnyUploadRouter from './routes/admin/bunny-upload.js';
@@ -24,16 +30,20 @@ import signVideoRouter from './routes/student/sign-video.js';
 import publicBatchesRouter from './routes/public/batches.js';
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.set('trust proxy', 1);
 app.use(express.json());
 app.use(cors);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // All routes under /api prefix
 app.use('/api/health', healthRouter);
 app.use('/api/testimonials', testimonialsRouter);
 app.use('/api/login', loginRouter);
 app.use('/api/logout', logoutRouter);
+app.use('/api/refresh', refreshRouter);
 
 // Admin Routes
 app.use('/api/admin/batches', batchesRouter);

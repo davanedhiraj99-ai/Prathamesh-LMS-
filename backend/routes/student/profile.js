@@ -7,7 +7,7 @@ const router = Router();
 router.get('/', checkAuth(async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, role, ip_slot_1, ip_slot_2, created_at FROM students WHERE id = $1',
+      'SELECT id, name, email, role, created_at FROM students WHERE id = $1',
       [req.user.id]
     );
     

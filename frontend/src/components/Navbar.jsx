@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import axios from '../utils/axios-instance.js';
+import { clearAuthSession } from '../utils/auth-session.js';
 import { useMediaQuery } from '../hooks/useMediaQuery.js';
 
 const Navbar = () => {
@@ -58,8 +59,7 @@ const Navbar = () => {
       console.error('Logout error:', error);
     }
 
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAuthSession();
     setUser(null);
     navigate('/login');
   };

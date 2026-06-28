@@ -1,6 +1,7 @@
 import checkAuth from '../../middleware/check-auth.js';
 import pool from '../../utils/db-client.js';
 import { Router } from 'express';
+import { syncBatchContentForBatchIds } from '../../utils/bunny-stream.js';
 
 const router = Router();
 
@@ -8,6 +9,15 @@ router.get('/', checkAuth(async (req, res) => {
   const studentId = req.user.id;
 
   try {
+    const studentBatchIdsResult = await pool.query(
+      `SELECT batch_id
+       FROM student_batches
+       WHERE student_id = $1 AND is_active = true`,
+      [studentId]
+    );
+
+    await syncBatchContentForBatchIds(studentBatchIdsResult.rows.map((row) => row.batch_id));
+
     const enrolledResult = await pool.query(`
       SELECT 
         b.id,
@@ -35,7 +45,7 @@ router.get('/', checkAuth(async (req, res) => {
         ) as videos
       FROM batches b
       INNER JOIN student_batches sb ON b.id = sb.batch_id
-      LEFT JOIN batch_content v ON b.id = v.batch_id AND v.type = 'video'
+      LEFT JOIN batch_content v ON b.id = v.batch_id AND v.type = 'video' AND v.status = 'ready'
       WHERE sb.student_id = $1 AND sb.is_active = true AND b.is_active = true
       GROUP BY b.id, b.uuid, b.name, b.description, b.thumbnail_url, b.created_at, sb.enrolled_at, sb.expires_at
       ORDER BY sb.enrolled_at DESC

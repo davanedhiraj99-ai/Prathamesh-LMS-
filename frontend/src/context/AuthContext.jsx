@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axios-instance.js';
+import { clearAuthSession, getStoredUser, setAccessToken, setStoredUser } from '../utils/auth-session.js';
 
 const AuthContext = createContext(null);
 
@@ -10,17 +11,30 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (token && storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        localStorage.removeItem('user');
+    const bootstrapAuth = async () => {
+      const storedUser = getStoredUser();
+      if (storedUser) {
+        setUser(storedUser);
       }
-    }
-    setLoading(false);
+
+      try {
+        const response = await axios.post('/refresh');
+        const { token, user: nextUser } = response.data || {};
+
+        if (token && nextUser) {
+          setAccessToken(token);
+          setStoredUser(nextUser);
+          setUser(nextUser);
+        }
+      } catch {
+        clearAuthSession();
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    bootstrapAuth();
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -33,8 +47,8 @@ export const AuthProvider = ({ children }) => {
       throw err;
     }
 
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(nextUser));
+    setAccessToken(token);
+    setStoredUser(nextUser);
     setUser(nextUser);
 
     return nextUser;
@@ -46,8 +60,7 @@ export const AuthProvider = ({ children }) => {
     } catch {
       // ignore
     } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      clearAuthSession();
       setUser(null);
       navigate('/login');
     }
@@ -72,4 +85,3 @@ export const useAuthContext = () => {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 };
-

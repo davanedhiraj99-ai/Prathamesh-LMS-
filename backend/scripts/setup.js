@@ -29,16 +29,20 @@ async function setup() {
       const jwtSecret = await question('Enter JWT_SECRET (min 32 chars): ');
       const bunnyKey = await question('Enter BUNNY_API_KEY: ');
       const bunnyLib = await question('Enter BUNNY_LIBRARY_ID: ');
+      const bunnyTokenKey = await question('Enter BUNNY_TOKEN_SECURITY_KEY: ');
 
       const envContent = `# Database
 DATABASE_URL=${dbUrl}
 
 # Security
 JWT_SECRET=${jwtSecret}
+REFRESH_TOKEN_DAYS=45
+MAX_ACTIVE_DEVICES=2
 
 # Bunny.net CDN
 BUNNY_API_KEY=${bunnyKey}
 BUNNY_LIBRARY_ID=${bunnyLib}
+BUNNY_TOKEN_SECURITY_KEY=${bunnyTokenKey}
 
 # Frontend
 VITE_BUNNY_LIBRARY_ID=${bunnyLib}

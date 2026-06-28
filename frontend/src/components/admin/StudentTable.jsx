@@ -26,15 +26,15 @@ const StudentTable = () => {
     fetchStudents();
   }, [fetchStudents]);
 
-  const handleResetIp = async (studentId) => {
-    if (!window.confirm('Reset IP slots for this student?')) return;
+  const handleResetDevices = async (studentId) => {
+    if (!window.confirm('Reset all remembered devices for this student?')) return;
 
     try {
       await axios.post('/admin/reset-ip', { studentId: Number(studentId) });
-      setMessage('SUCCESS: IP slots reset successfully!');
+      setMessage('SUCCESS: Device sessions reset successfully!');
       fetchStudents();
     } catch (error) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.details || 'Failed to reset IP slots';
+      const errorMsg = error.response?.data?.error || error.response?.data?.details || 'Failed to reset device sessions';
       setMessage(`ERROR: ${errorMsg}`);
     }
   };
@@ -110,10 +110,10 @@ const StudentTable = () => {
                 Role
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                IP Slot 1
+                Active Devices
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                IP Slot 2
+                Last Seen
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -137,17 +137,17 @@ const StudentTable = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                  {student.ip_slot_1 || 'Empty'}
+                  {student.active_devices ?? 0}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                  {student.ip_slot_2 || 'Empty'}
+                  {student.last_seen_at ? new Date(student.last_seen_at).toLocaleString() : 'Never'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                   <button
-                    onClick={() => handleResetIp(student.id)}
+                    onClick={() => handleResetDevices(student.id)}
                     className="text-yellow-600 hover:text-yellow-900 bg-yellow-50 px-3 py-1 rounded-md transition"
                   >
-                    Reset IP
+                    Reset Devices
                   </button>
                   <button
                     onClick={() => handleDelete(student.id)}

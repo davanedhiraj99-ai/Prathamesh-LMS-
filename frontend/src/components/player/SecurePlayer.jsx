@@ -7,14 +7,13 @@ const SecurePlayer = ({ bunnyVideoId, title }) => {
   if (error) return <div className="p-4 text-red-500">{error}</div>;
 
   return (
-    <div className="relative aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+    <div className="relative aspect-video overflow-hidden rounded-lg bg-black shadow-2xl">
       <iframe
         src={signedUrl}
         title={title || 'Video player'}
-        className="w-full h-full"
-        allow="autoplay; encrypted-media; picture-in-picture"
+        className="absolute left-0 top-0 h-full w-full"
+        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
-        sandbox="allow-same-origin allow-scripts"
         style={{ border: 'none' }}
       />
       

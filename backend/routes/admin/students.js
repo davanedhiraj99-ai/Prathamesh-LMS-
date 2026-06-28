@@ -8,9 +8,21 @@ const router = Router();
 router.get('/', checkAuth(async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, name, email, role, ip_slot_1, ip_slot_2, created_at 
-      FROM students 
-      ORDER BY created_at DESC
+      SELECT
+        s.id,
+        s.name,
+        s.email,
+        s.role,
+        s.created_at,
+        COUNT(ud.id)::int AS active_devices,
+        MAX(ud.last_seen_at) AS last_seen_at
+      FROM students s
+      LEFT JOIN user_devices ud
+        ON ud.user_id = s.id
+       AND ud.is_active = true
+       AND ud.revoked_at IS NULL
+      GROUP BY s.id, s.name, s.email, s.role, s.created_at
+      ORDER BY s.created_at DESC
     `);
     res.status(200).json(result.rows);
   } catch (error) {
@@ -21,9 +33,9 @@ router.get('/', checkAuth(async (req, res) => {
 
 router.post('/', checkAuth(async (req, res) => {
   const { name, email, password, role = 'student' } = req.body;
-  
+
   if (!name || !email || !password) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Missing required fields',
       details: 'Name, email, and password are required'
     });
@@ -31,27 +43,27 @@ router.post('/', checkAuth(async (req, res) => {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Invalid email format',
       details: 'Please provide a valid email address'
     });
   }
 
   if (password.length < 6) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Password too short',
       details: 'Password must be at least 6 characters'
     });
   }
-  
+
   try {
     const existingCheck = await pool.query(
       'SELECT id FROM students WHERE email = $1',
       [email]
     );
-    
+
     if (existingCheck.rows.length > 0) {
-      return res.status(409).json({ 
+      return res.status(409).json({
         error: 'Email already exists',
         details: 'A student with this email is already registered'
       });
@@ -62,12 +74,11 @@ router.post('/', checkAuth(async (req, res) => {
       'INSERT INTO students (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
       [name.trim(), email.toLowerCase().trim(), hashedPassword, role]
     );
-    
+
     res.status(201).json(result.rows[0]);
-    
   } catch (error) {
     console.error('POST student error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create student',
       details: error.message,
       hint: 'Check database connection and schema'
@@ -78,11 +89,11 @@ router.post('/', checkAuth(async (req, res) => {
 router.delete('/', checkAuth(async (req, res) => {
   const { id } = req.query;
   const studentId = Number(id);
-  
+
   if (!Number.isInteger(studentId) || studentId <= 0) {
     return res.status(400).json({ error: 'Student ID is required' });
   }
-  
+
   try {
     const checkResult = await pool.query('SELECT id FROM students WHERE id = $1', [studentId]);
     if (checkResult.rows.length === 0) {
@@ -93,7 +104,7 @@ router.delete('/', checkAuth(async (req, res) => {
     res.status(200).json({ success: true, message: 'Student deleted successfully' });
   } catch (error) {
     console.error('DELETE student error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to delete student',
       details: error.message
     });

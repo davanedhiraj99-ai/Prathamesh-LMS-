@@ -17,6 +17,26 @@ const LectureManager = ({ batches }) => {
     }
   }, [selectedBatch]);
 
+  useEffect(() => {
+    if (!selectedBatch) {
+      return undefined;
+    }
+
+    const hasPendingVideos = (content.videos || []).some(
+      (video) => video.status === 'uploading' || video.status === 'processing'
+    );
+
+    if (!hasPendingVideos) {
+      return undefined;
+    }
+
+    const intervalId = setInterval(() => {
+      fetchContent();
+    }, 15000);
+
+    return () => clearInterval(intervalId);
+  }, [selectedBatch, content.videos]);
+
   const fetchContent = async () => {
     setLoading(true);
     try {

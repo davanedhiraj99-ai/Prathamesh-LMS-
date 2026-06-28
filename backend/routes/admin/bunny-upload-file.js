@@ -3,6 +3,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import fs from 'node:fs';
 import path from 'node:path';
+import axios from 'axios';
 
 const tmpDir = process.env.VERCEL ? '/tmp' : path.resolve('tmp');
 fs.mkdirSync(tmpDir, { recursive: true });
@@ -27,28 +28,40 @@ router.post(
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    const { videoId, libraryId } = req.body;
-    if (!videoId || !libraryId) {
-      return res.status(400).json({ error: 'videoId and libraryId are required' });
+    const { videoId } = req.body;
+    if (!videoId) {
+      return res.status(400).json({ error: 'videoId is required' });
     }
 
     if (!req.file?.path) {
       return res.status(400).json({ error: 'file is required' });
     }
 
-    const uploadUrl = `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`;
-    const fileStream = fs.createReadStream(req.file.path);
+    const uploadUrl = `https://video.bunnycdn.com/library/${process.env.BUNNY_LIBRARY_ID}/videos/${videoId}`;
 
     try {
-      const response = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { AccessKey: process.env.BUNNY_API_KEY },
-        body: fileStream
+      const fileStats = await fs.promises.stat(req.file.path);
+      const fileStream = fs.createReadStream(req.file.path);
+      const response = await axios.put(uploadUrl, fileStream, {
+        headers: {
+          AccessKey: process.env.BUNNY_API_KEY,
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': fileStats.size
+        },
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        validateStatus: () => true
       });
 
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        return res.status(502).json({ error: 'Failed to upload to Bunny', details: text || String(response.status) });
+      if (response.status < 200 || response.status >= 300) {
+        const responseDetails =
+          typeof response.data === 'string'
+            ? response.data
+            : response.data?.message || response.data?.Message || JSON.stringify(response.data || {});
+        return res.status(502).json({
+          error: 'Failed to upload to Bunny',
+          details: responseDetails || String(response.status)
+        });
       }
 
       return res.status(200).json({ success: true });
