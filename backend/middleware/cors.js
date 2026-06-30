@@ -18,7 +18,12 @@ function isAllowedOrigin(origin) {
   try {
     const url = new URL(origin);
     const hostname = url.hostname.toLowerCase();
-    return hostname === 'localhost' || hostname === '127.0.0.1';
+    return (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === 'prathamesh-lms-frontend.vercel.app' ||
+      (hostname.endsWith('.vercel.app') && hostname.includes('prathamesh-lms-frontend'))
+    );
   } catch {
     return false;
   }

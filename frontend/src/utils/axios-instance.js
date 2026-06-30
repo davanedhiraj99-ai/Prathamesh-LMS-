@@ -8,6 +8,24 @@ function createConfigurationError(message) {
   return error;
 }
 
+function inferProductionBaseURL() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const hostname = String(window.location.hostname || '').toLowerCase();
+
+  if (hostname === 'prathamesh-lms-frontend.vercel.app') {
+    return 'https://prathamesh-lms-backend.vercel.app/api';
+  }
+
+  if (hostname.endsWith('.vercel.app') && hostname.includes('prathamesh-lms-frontend')) {
+    return 'https://prathamesh-lms-backend.vercel.app/api';
+  }
+
+  return null;
+}
+
 function resolveBaseURL() {
   const envBaseURL = String(import.meta.env.VITE_API_BASE_URL || '').trim();
 
@@ -16,7 +34,7 @@ function resolveBaseURL() {
   }
 
   if (import.meta.env.PROD) {
-    return null;
+    return inferProductionBaseURL();
   }
 
   return 'http://localhost:3000/api';
