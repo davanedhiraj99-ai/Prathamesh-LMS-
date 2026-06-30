@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from '../../utils/axios-instance.js';
 import SecurePlayer from '../player/SecurePlayer.jsx';
+import { useToast } from '../../context/ToastContext.jsx';
 
 const LectureManager = ({ batches }) => {
   const [selectedBatch, setSelectedBatch] = useState('');
@@ -10,6 +11,7 @@ const LectureManager = ({ batches }) => {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [editingContent, setEditingContent] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', description: '' });
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (selectedBatch) {
@@ -47,7 +49,7 @@ const LectureManager = ({ batches }) => {
       }
     } catch (error) {
       console.error('Error fetching content:', error);
-      alert('Failed to load content');
+      showToast('Failed to load content.', 'error');
     } finally {
       setLoading(false);
     }
@@ -57,13 +59,13 @@ const LectureManager = ({ batches }) => {
     if (!confirm(`Delete this ${type}? This action cannot be undone.`)) return;
     try {
       await axios.delete(`/admin/batch-content?id=${contentId}`);
-      alert(`${type} deleted successfully`);
+      showToast(`${type} deleted successfully.`, 'success');
       fetchContent();
       if (selectedVideo?.id === contentId) {
         setSelectedVideo(null);
       }
     } catch (error) {
-      alert('Failed to delete content');
+      showToast(error.response?.data?.error || 'Failed to delete content.', 'error');
     }
   };
 
@@ -82,11 +84,11 @@ const LectureManager = ({ batches }) => {
         title: editForm.title,
         description: editForm.description
       });
-      alert('Content updated successfully');
+      showToast('Content updated successfully.', 'success');
       setEditingContent(null);
       fetchContent();
     } catch (error) {
-      alert('Failed to update content');
+      showToast(error.response?.data?.error || 'Failed to update content.', 'error');
     }
   };
 

@@ -10,6 +10,7 @@ import AdminPanel from './pages/AdminPanel';
 import BatchDetails from './pages/BatchDetails';
 import Contact from './pages/Contact';
 import Testimonials from './pages/Testimonials';
+import Profile from './pages/Profile';
 
 // Components
 import Navbar from './components/Navbar';
@@ -41,6 +42,12 @@ function App() {
         <Route path="/batch/:batchId" element={
           <ProtectedRoute allowedRoles={['student']}>
             <BatchDetails />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/profile" element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <Profile />
           </ProtectedRoute>
         } />
         

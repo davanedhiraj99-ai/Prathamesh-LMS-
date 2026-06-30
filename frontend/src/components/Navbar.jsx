@@ -1,11 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import axios from '../utils/axios-instance.js';
-import { clearAuthSession } from '../utils/auth-session.js';
 import { useMediaQuery } from '../hooks/useMediaQuery.js';
+import { useAuth } from '../hooks/useAuth.js';
 
 const Navbar = () => {
-  const [user, setUser] = useState(null);
   const [courses, setCourses] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,13 +13,9 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const isDesktop = useMediaQuery('(min-width: 768px)');
+  const { user, logout } = useAuth();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    
     fetchCourses();
     
     const handleClickOutside = (event) => {
@@ -53,22 +48,22 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      await axios.post('/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-
-    clearAuthSession();
-    setUser(null);
-    navigate('/login');
+    await logout();
+    setIsDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsMobileCoursesOpen(false);
   };
 
   const handleCourseClick = (courseId) => {
     setIsDropdownOpen(false);
     setIsMobileMenuOpen(false);
     setIsMobileCoursesOpen(false);
-    navigate(`/course/${courseId}`);
+    if (user?.role === 'student') {
+      navigate(`/batch/${courseId}`);
+      return;
+    }
+
+    navigate('/login');
   };
 
   return (
@@ -168,6 +163,16 @@ const Navbar = () => {
                     </Link>
                   )}
                   {user.role === 'student' && (
+                    <>
+                      <Link to="/dashboard" className="text-sm font-semibold text-slate-700 hover:text-slate-900 transition">
+                        Dashboard
+                      </Link>
+                      <Link to="/profile" className="text-sm font-semibold text-slate-700 hover:text-slate-900 transition">
+                        Profile
+                      </Link>
+                    </>
+                  )}
+                  {user.role !== 'admin' && user.role !== 'student' && (
                     <Link to="/dashboard" className="text-sm font-semibold text-slate-700 hover:text-slate-900 transition">
                       Dashboard
                     </Link>
@@ -236,14 +241,19 @@ const Navbar = () => {
             <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">
               Contact
             </Link>
+            {user?.role === 'student' && (
+              <>
+                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">
+                  Dashboard
+                </Link>
+                <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">
+                  Profile
+                </Link>
+              </>
+            )}
             {user?.role === 'admin' && (
               <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">
                 Admin Panel
-              </Link>
-            )}
-            {user?.role === 'student' && (
-              <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">
-                Dashboard
               </Link>
             )}
             <div className="pt-2">

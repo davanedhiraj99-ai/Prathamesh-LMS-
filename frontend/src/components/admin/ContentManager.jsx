@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from '../../utils/axios-instance.js';
+import { useToast } from '../../context/ToastContext.jsx';
 
 const ContentManager = ({ batches }) => {
   const [selectedBatch, setSelectedBatch] = useState('');
@@ -13,6 +14,7 @@ const ContentManager = ({ batches }) => {
   const [uploading, setUploading] = useState(false);
   const [placement, setPlacement] = useState('last');
   const [positionNumber, setPositionNumber] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (selectedBatch) {
@@ -67,7 +69,7 @@ const ContentManager = ({ batches }) => {
   const handleVideoUpload = async (event) => {
     event.preventDefault();
     if (!title || !selectedFile || !selectedBatch) {
-      alert('Please fill all fields and select a video file');
+      showToast('Please fill all fields and select a video file.', 'error');
       return;
     }
 
@@ -102,13 +104,13 @@ const ContentManager = ({ batches }) => {
         positionNumber: placement === 'number' ? positionNumber : null
       });
 
-      alert('Video uploaded successfully.');
+      showToast('Video uploaded successfully.', 'success');
       resetUploadForm();
       setActiveTab('videos');
       await fetchContent();
     } catch (error) {
       console.error('Upload error:', error);
-      alert(`Failed to upload video: ${error.response?.data?.error || error.message}`);
+      showToast(`Failed to upload video: ${error.response?.data?.error || error.message}`, 'error');
     } finally {
       setUploading(false);
     }
@@ -117,12 +119,12 @@ const ContentManager = ({ batches }) => {
   const handleNoteUpload = async (event) => {
     event.preventDefault();
     if (!title || !selectedFile || !selectedBatch) {
-      alert('Please fill all fields and select a PDF file');
+      showToast('Please fill all fields and select a PDF file.', 'error');
       return;
     }
 
     if (selectedFile.type !== 'application/pdf') {
-      alert('Please upload a PDF file only');
+      showToast('Please upload a PDF file only.', 'error');
       return;
     }
 
@@ -149,13 +151,13 @@ const ContentManager = ({ batches }) => {
         }
       });
 
-      alert('Note uploaded successfully.');
+      showToast('Note uploaded successfully.', 'success');
       resetUploadForm();
       setActiveTab('notes');
       await fetchContent();
     } catch (error) {
       console.error('Note upload error:', error);
-      alert(`Failed to upload note: ${error.response?.data?.error || error.message}`);
+      showToast(`Failed to upload note: ${error.response?.data?.error || error.message}`, 'error');
     } finally {
       setUploading(false);
     }
@@ -166,9 +168,10 @@ const ContentManager = ({ batches }) => {
 
     try {
       await axios.delete(`/admin/batch-content?id=${contentId}`);
+      showToast('Content deleted successfully.', 'success');
       await fetchContent();
     } catch (error) {
-      alert('Failed to delete');
+      showToast(error.response?.data?.error || 'Failed to delete content.', 'error');
     }
   };
 

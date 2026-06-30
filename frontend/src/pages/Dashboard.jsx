@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from '../utils/axios-instance.js';
+import { useToast } from '../context/ToastContext.jsx';
 
 const Dashboard = () => {
   const [enrolled, setEnrolled] = useState([]);
   const [available, setAvailable] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('my-courses');
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchData();
@@ -130,7 +132,7 @@ const Dashboard = () => {
                       <span>{course.video_count} videos available</span>
                     </div>
                     <button
-                      onClick={() => alert('Contact Prathamesh Sir to enroll in this course')}
+                      onClick={() => showToast('Contact Prathamesh Sir to enroll in this course.', 'info')}
                       className="mt-5 block w-full text-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
                     >
                       Request Enrollment
