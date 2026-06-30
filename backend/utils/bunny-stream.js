@@ -186,6 +186,39 @@ async function deleteBatchContentRow(id) {
   return result.rows[0] || null;
 }
 
+async function ensureNoteStillExists(fileUrl) {
+  const config = getBunnyStorageConfig();
+  const storagePath = buildStoragePathFromUrl(fileUrl);
+
+  if (!config || !storagePath) {
+    return null;
+  }
+
+  const response = await fetchWithRetries(
+    `https://${config.storageHost}/${config.storageZone}/${storagePath}`,
+    {
+      method: 'HEAD',
+      headers: {
+        AccessKey: config.storagePassword
+      }
+    }
+  );
+
+  if (response.status === 404) {
+    const error = new Error('Bunny note not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!response.ok) {
+    const error = new Error(`Bunny note sync failed: ${response.status}`);
+    error.statusCode = response.status;
+    throw error;
+  }
+
+  return true;
+}
+
 function mapBunnyStatus(videoData) {
   if (!videoData) return null;
 
@@ -286,9 +319,61 @@ export async function syncVideoStatuses(videoRows = []) {
     .map((row) => (row?.type === 'video' ? syncedMap.get(row.id) : row));
 }
 
+export async function syncNoteStatuses(noteRows = []) {
+  await ensureBunnyResilienceSchema();
+
+  const candidates = noteRows.filter((row) => row?.type === 'note' && row?.url);
+  if (candidates.length === 0) return noteRows;
+
+  const syncedRows = await Promise.all(
+    candidates.map(async (row) => {
+      try {
+        if (await shouldSkipBunnySync(row)) {
+          return row;
+        }
+
+        await ensureNoteStillExists(row.url);
+
+        return (
+          (await markBunnySyncSuccess(row.id)) || {
+            ...row,
+            bunny_sync_error_count: 0,
+            bunny_last_sync_error: null,
+            bunny_next_sync_attempt_at: null
+          }
+        );
+      } catch (error) {
+        if (error.statusCode === 404) {
+          try {
+            await deleteBatchContentRow(row.id);
+            return null;
+          } catch (updateError) {
+            console.error(`Failed to remove missing note ${row.id}:`, updateError.message);
+          }
+        }
+
+        if (isRetryableBunnyStatus(error.statusCode)) {
+          const updatedRow = await markBunnySyncFailure(row, error.message);
+          console.error(`Bunny sync temporarily unavailable for note ${row.id}:`, error.message);
+          return updatedRow;
+        }
+
+        console.error(`Bunny sync failed for note ${row.id}:`, error.message);
+        return row;
+      }
+    })
+  );
+
+  const syncedMap = new Map(syncedRows.filter(Boolean).map((row) => [row.id, row]));
+  return noteRows
+    .filter((row) => row?.type !== 'note' || syncedMap.has(row.id))
+    .map((row) => (row?.type === 'note' ? syncedMap.get(row.id) : row));
+}
+
 export async function syncBatchContentRows(rows = []) {
   await processPendingBunnyCleanupJobs();
-  return syncVideoStatuses(rows);
+  const videoSyncedRows = await syncVideoStatuses(rows);
+  return syncNoteStatuses(videoSyncedRows);
 }
 
 export async function syncBatchContentForBatchIds(batchIds = []) {
