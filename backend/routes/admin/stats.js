@@ -13,9 +13,9 @@ router.get('/', checkAuth(async (req, res) => {
       enrollmentsResult
     ] = await Promise.all([
       pool.query('SELECT COUNT(*) FROM students WHERE role = $1', ['student']),
-      pool.query('SELECT COUNT(*) FROM batches'),
+      pool.query('SELECT COUNT(*) FROM batches WHERE is_active = true'),
       pool.query('SELECT COUNT(*) FROM batch_content WHERE type = $1', ['video']),
-      pool.query('SELECT COUNT(*) FROM student_batches')
+      pool.query('SELECT COUNT(*) FROM student_batches WHERE is_active = true')
     ]);
 
     res.status(200).json({

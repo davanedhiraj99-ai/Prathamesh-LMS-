@@ -23,6 +23,8 @@ router.get('/', checkAuth(async (req, res) => {
         FROM student_batches sb
         INNER JOIN batches b ON b.id = sb.batch_id
         WHERE sb.student_id = $1
+          AND sb.is_active = true
+          AND b.is_active = true
         ORDER BY sb.enrolled_at DESC
       `,
       [id]
@@ -60,4 +62,3 @@ router.delete('/', checkAuth(async (req, res) => {
 }, 'admin'));
 
 export default router;
-

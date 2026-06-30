@@ -6,7 +6,9 @@ const router = Router();
 
 router.get('/', checkAuth(async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM batches ORDER BY created_at DESC');
+    const result = await pool.query(
+      'SELECT * FROM batches WHERE is_active = true ORDER BY created_at DESC'
+    );
     res.status(200).json(result.rows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch batches' });
@@ -35,11 +37,39 @@ router.delete('/', checkAuth(async (req, res) => {
   if (!Number.isInteger(batchId) || batchId <= 0) {
     return res.status(400).json({ error: 'Batch id is required' });
   }
+
+  const client = await pool.connect();
+
   try {
-    await pool.query('DELETE FROM batches WHERE id = $1', [batchId]);
-    res.status(200).json({ success: true });
+    await client.query('BEGIN');
+
+    const batchResult = await client.query(
+      `UPDATE batches
+       SET is_active = false
+       WHERE id = $1 AND is_active = true
+       RETURNING id, name`,
+      [batchId]
+    );
+
+    if (batchResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Batch not found or already deleted' });
+    }
+
+    await client.query(
+      `UPDATE student_batches
+       SET is_active = false
+       WHERE batch_id = $1 AND is_active = true`,
+      [batchId]
+    );
+
+    await client.query('COMMIT');
+    res.status(200).json({ success: true, batch: batchResult.rows[0] });
   } catch (error) {
+    await client.query('ROLLBACK');
     res.status(500).json({ error: 'Failed to delete batch' });
+  } finally {
+    client.release();
   }
 }, 'admin'));
 
